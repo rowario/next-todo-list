@@ -1,3 +1,5 @@
+import { Provider } from "react-redux";
+import store from "@/app/store";
 import "@/styles/globals.css";
 import { MantineProvider } from "@mantine/core";
 import type { AppProps } from "next/app";
@@ -18,7 +20,9 @@ export default function App({ Component, pageProps }: AppProps) {
                 withNormalizeCSS
                 theme={{ colorScheme: "dark" }}
             >
-                <Component {...pageProps} />
+                <Provider store={store}>
+                    <Component {...pageProps} />
+                </Provider>
             </MantineProvider>
         </>
     );
