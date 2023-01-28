@@ -1,6 +1,6 @@
 import { FC, useState } from "react";
 import { useAddTodoMutation } from "@/api";
-import { Button, Input } from "@mantine/core";
+import { Button, Input, LoadingOverlay } from "@mantine/core";
 
 const AddTodoForm: FC = () => {
     const [title, setTitle] = useState("");
@@ -9,7 +9,7 @@ const AddTodoForm: FC = () => {
     return (
         <>
             <form
-                style={{ display: "flex" }}
+                style={{ display: "flex", position: "relative" }}
                 onSubmit={(e) => {
                     e.preventDefault();
                     if (title.length) {
@@ -20,6 +20,7 @@ const AddTodoForm: FC = () => {
                     }
                 }}
             >
+                <LoadingOverlay visible={isLoading} overlayBlur={2} />
                 <Input
                     invalid={isInvalid}
                     value={title}
@@ -29,11 +30,8 @@ const AddTodoForm: FC = () => {
                     }}
                     sx={{ flexGrow: 1, paddingRight: 8 }}
                     placeholder="Название задачи"
-                    disabled={isLoading}
                 ></Input>
-                <Button type="submit" disabled={isLoading}>
-                    Добавить
-                </Button>
+                <Button type="submit">Добавить</Button>
             </form>
         </>
     );

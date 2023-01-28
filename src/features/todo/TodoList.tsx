@@ -2,14 +2,25 @@ import { FC } from "react";
 import AddTodoForm from "./AddTodoForm";
 import TodoItem from "./TodoItem";
 import { useGetTodosQuery } from "@/api";
+import { Loader } from "@mantine/core";
 
 const TodoList: FC = () => {
     const { data: todos, isLoading } = useGetTodosQuery();
-    if (isLoading) return <>Загрузка...</>;
+    if (isLoading)
+        return (
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "center",
+                }}
+            >
+                <Loader />
+            </div>
+        );
     return (
         <>
             Список задач:
-			<br />
+            <br />
             {todos &&
                 todos.map((todo) => (
                     <TodoItem key={todo.id} todo={todo}></TodoItem>

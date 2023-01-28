@@ -2,22 +2,33 @@
 import prisma from "@/app/prisma";
 import { Todo } from "@prisma/client";
 import type { NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]";
 
 type Data =
     | Todo
     | Todo[]
     | {
-          error?: string;
+          message?: string;
       };
 
 export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse<Data>
 ) {
+    const session = await getServerSession(req, res, authOptions);
+    if (!session || !session.user) {
+        res.status(401).json({ message: "Unauthorized." });
+        return;
+    }
+    const { id: userId } = session.user;
     switch (req.method) {
         case "GET":
             {
                 const todos = await prisma.todo.findMany({
+                    where: {
+                        userId,
+                    },
                     orderBy: {
                         id: "asc",
                     },
@@ -36,20 +47,20 @@ export default async function handler(
                         data: {
                             ...newTodo,
                             completed: false,
-                            userId: 1,
-                            dayId: 1,
+                            userId,
+                            dayId: "cldg59u7b0000cggmahrrnom7",
                         },
                     });
                     res.status(200).json(createdTodo);
                 } catch (e) {
                     res.status(400).json({
-                        error: "Ошибка при создании задания.",
+                        message: "Ошибка при создании задания.",
                     });
                 }
             }
             break;
         default:
-            res.status(405).json({ error: "Method not allowed." });
+            res.status(405).json({ message: "Method not allowed." });
             break;
     }
 }

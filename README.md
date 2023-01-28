@@ -1,4 +1,4 @@
 ## TODOs
 
-- [ ] Render optimization
-- [ ] Add auth
+-   [ ] Render optimization
+-   [x] Add auth

@@ -2,6 +2,8 @@
 import prisma from "@/app/prisma";
 import { Todo } from "@prisma/client";
 import type { NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]";
 
 type Data =
     | Todo
@@ -13,17 +15,24 @@ export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse<Data>
 ) {
+    const session = await getServerSession(req, res, authOptions);
+    if (!session || !session.user) {
+        res.status(401).json({ message: "Unauthorized." });
+        return;
+    }
+    const { id: userId } = session.user;
     switch (req.method) {
         case "PATCH":
             {
                 try {
-                    const newTodo: Omit<Todo, "dayId" | "userId"> = req.body;
+                    const patch: Omit<Todo, "dayId" | "userId"> = req.body;
                     const updatedTodo = await prisma.todo.update({
                         where: {
-                            id: newTodo.id,
+                            id: patch.id,
+                            userId,
                         },
                         data: {
-                            ...newTodo,
+                            ...patch,
                         },
                     });
                     res.status(200).json(updatedTodo);
@@ -37,10 +46,11 @@ export default async function handler(
         case "DELETE":
             {
                 try {
-                    const id: number = parseInt(req.query.id as string, 10);
+                    const id = req.query.id as string;
                     await prisma.todo.delete({
                         where: {
                             id,
+                            userId,
                         },
                     });
                     res.status(200).json({

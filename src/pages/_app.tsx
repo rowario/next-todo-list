@@ -1,4 +1,5 @@
-import { Provider } from "react-redux";
+import { Provider as StoreProvider } from "react-redux";
+import { SessionProvider } from "next-auth/react";
 import store from "@/app/store";
 import "@/styles/globals.css";
 import { MantineProvider } from "@mantine/core";
@@ -20,9 +21,11 @@ export default function App({ Component, pageProps }: AppProps) {
                 withNormalizeCSS
                 theme={{ colorScheme: "dark" }}
             >
-                <Provider store={store}>
-                    <Component {...pageProps} />
-                </Provider>
+                <SessionProvider session={pageProps.session}>
+                    <StoreProvider store={store}>
+                        <Component {...pageProps} />
+                    </StoreProvider>
+                </SessionProvider>
             </MantineProvider>
         </>
     );
