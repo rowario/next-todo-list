@@ -9,11 +9,12 @@ const TodoList: FC = () => {
     return (
         <>
             Список задач:
+			<br />
             {todos &&
                 todos.map((todo) => (
                     <TodoItem key={todo.id} todo={todo}></TodoItem>
                 ))}
-            {(!todos || !todos.length) && "Нет задач"}
+            {(!todos || !todos.length) && "У вас нет задач."}
             <div style={{ paddingTop: 4 }}>
                 <AddTodoForm />
             </div>
