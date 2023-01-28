@@ -6,7 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 type Data =
     | Todo
     | {
-          error?: string;
+          message?: string;
       };
 
 export default async function handler(
@@ -29,13 +29,32 @@ export default async function handler(
                     res.status(200).json(updatedTodo);
                 } catch (e) {
                     res.status(400).json({
-                        error: "Ошибка при создании задания.",
+                        message: "Ошибка при создании задания.",
+                    });
+                }
+            }
+            break;
+        case "DELETE":
+            {
+                try {
+                    const id: number = parseInt(req.query.id as string, 10);
+                    await prisma.todo.delete({
+                        where: {
+                            id,
+                        },
+                    });
+                    res.status(200).json({
+                        message: "Задача успешно уделена!",
+                    });
+                } catch (e) {
+                    res.status(400).json({
+                        message: "Ошибка при удалении задачи.",
                     });
                 }
             }
             break;
         default:
-            res.status(405).json({ error: "Method not allowed." });
+            res.status(405).json({ message: "Method not allowed." });
             break;
     }
 }

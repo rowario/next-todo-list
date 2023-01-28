@@ -41,10 +41,34 @@ const api = createApi({
             }),
             invalidatesTags: ["Todo"],
         }),
+        deleteTodo: build.mutation<void, number>({
+            query: (id) => ({
+                url: `/todo/${id}`,
+                method: "DELETE",
+            }),
+            // invalidatesTags: ["Todo"],
+            onQueryStarted: async (id, { dispatch, queryFulfilled }) => {
+                const patchResult = dispatch(
+                    api.util.updateQueryData("getTodos", undefined, (draft) => {
+                        const current = draft.findIndex((x) => x.id === id);
+                        draft.splice(current, 1);
+                    })
+                );
+                try {
+                    await queryFulfilled;
+                } catch (e) {
+                    patchResult.undo();
+                }
+            },
+        }),
     }),
 });
 
 export default api;
 
-export const { useGetTodosQuery, useAddTodoMutation, useToggleTodoMutation } =
-    api;
+export const {
+    useGetTodosQuery,
+    useAddTodoMutation,
+    useToggleTodoMutation,
+    useDeleteTodoMutation,
+} = api;

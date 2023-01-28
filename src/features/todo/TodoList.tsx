@@ -1,9 +1,10 @@
 import {
     useAddTodoMutation,
+    useDeleteTodoMutation,
     useGetTodosQuery,
     useToggleTodoMutation,
-} from "@/api/api";
-import { Button, Checkbox, Input } from "@mantine/core";
+} from "@/api";
+import { Button, Checkbox, CloseButton, Input } from "@mantine/core";
 import { Todo } from "@prisma/client";
 import { useState } from "react";
 
@@ -35,27 +36,49 @@ type TodoItemProps = {
 
 function TodoItem({ todo }: TodoItemProps) {
     const [toggleTodo] = useToggleTodoMutation();
+    const [deleteTodo] = useDeleteTodoMutation();
     return (
-        <Checkbox
-            onChange={() => {
-                toggleTodo(todo);
+        <div
+            style={{
+                paddingTop: 4,
+                paddingBottom: 4,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
             }}
-            sx={{
-                paddingTop: 8,
-                paddingBottom: 8,
-            }}
-            label={todo.title}
-            checked={todo.completed}
-        />
+        >
+            <Checkbox
+                onChange={() => {
+                    toggleTodo(todo);
+                }}
+                label={todo.title}
+                checked={todo.completed}
+            />
+            <CloseButton
+                onClick={() => {
+                    deleteTodo(todo.id);
+                }}
+                aria-label="Delete todo"
+            />
+        </div>
     );
 }
 
 function AddTodoForm() {
     const [title, setTitle] = useState("");
-    const [addTodo] = useAddTodoMutation();
+    const [addTodo, { isLoading }] = useAddTodoMutation();
     return (
         <>
-            <div style={{ display: "flex", width: "100%", flexGrow: 1 }}>
+            <form
+                style={{ display: "flex" }}
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    if (title.length) {
+                        addTodo(title);
+                        setTitle("");
+                    }
+                }}
+            >
                 <Input
                     value={title}
                     onChange={(e) => {
@@ -63,16 +86,12 @@ function AddTodoForm() {
                     }}
                     sx={{ flexGrow: 1, paddingRight: 8 }}
                     placeholder="Название задачи"
+                    disabled={isLoading}
                 ></Input>
-                <Button
-                    onClick={() => {
-                        addTodo(title);
-                        setTitle("");
-                    }}
-                >
+                <Button type="submit" disabled={isLoading}>
                     Добавить
                 </Button>
-            </div>
+            </form>
         </>
     );
 }
