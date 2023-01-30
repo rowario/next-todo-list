@@ -1,11 +1,20 @@
 import { FC } from "react";
-import { useDeleteTodoMutation, useToggleTodoMutation } from "@/api";
+import {
+    selectTodoById,
+    useDeleteTodoMutation,
+    useToggleTodoMutation,
+} from "@/api";
 import { Checkbox, CloseButton } from "@mantine/core";
-import { Todo } from "@prisma/client";
+import { EntityId } from "@reduxjs/toolkit";
+import { useAppSelector } from "@/hooks/redux";
 
 const TodoItem: FC<{
-    todo: Todo;
-}> = ({ todo }) => {
+    todoId: EntityId;
+}> = ({ todoId }) => {
+    const todo = useAppSelector((state) => selectTodoById(state, todoId));
+
+	if (!todo) return null;
+
     const [toggleTodo] = useToggleTodoMutation();
     const [deleteTodo] = useDeleteTodoMutation();
     return (

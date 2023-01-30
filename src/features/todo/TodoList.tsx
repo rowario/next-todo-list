@@ -1,11 +1,20 @@
-import { FC } from "react";
+import { FC, useEffect } from "react";
 import AddTodoForm from "./AddTodoForm";
 import TodoItem from "./TodoItem";
-import { useGetTodosQuery } from "@/api";
+import api, { selectTodoIds, useGetTodosQuery } from "@/api";
 import { Loader } from "@mantine/core";
+import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 
 const TodoList: FC = () => {
-    const { data: todos, isLoading } = useGetTodosQuery();
+    const todoIds = useAppSelector((state) => selectTodoIds(state));
+    const dispatch = useAppDispatch();
+
+	const {isLoading} = useGetTodosQuery();
+
+    useEffect(() => {
+        dispatch(api.endpoints.getTodos.initiate());
+    }, []);
+
     if (isLoading)
         return (
             <div
@@ -21,11 +30,11 @@ const TodoList: FC = () => {
         <>
             Список задач:
             <br />
-            {todos &&
-                todos.map((todo) => (
-                    <TodoItem key={todo.id} todo={todo}></TodoItem>
+            {todoIds &&
+                todoIds.map((todoId) => (
+                    <TodoItem key={todoId} todoId={todoId}></TodoItem>
                 ))}
-            {(!todos || !todos.length) && "У вас нет задач."}
+            {(!todoIds || !todoIds.length) && "У вас нет задач."}
             <div style={{ paddingTop: 4 }}>
                 <AddTodoForm />
             </div>

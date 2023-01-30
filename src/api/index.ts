@@ -1,13 +1,27 @@
+import { RootState } from "@/app/store";
 import { Todo } from "@prisma/client";
+import {
+    createEntityAdapter,
+    createSelector,
+    EntityState,
+} from "@reduxjs/toolkit";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+
+const todoAdapter = createEntityAdapter<Todo>({
+    selectId: (todo) => todo.id,
+});
+const initialState = todoAdapter.getInitialState();
 
 const api = createApi({
     tagTypes: ["Todo"],
     reducerPath: "api",
     baseQuery: fetchBaseQuery({ baseUrl: "/api" }),
     endpoints: (build) => ({
-        getTodos: build.query<Todo[], void>({
+        getTodos: build.query<EntityState<Todo>, void>({
             query: () => "/todo",
+            transformResponse: (response: Todo[]) => {
+                return todoAdapter.setAll(initialState, response);
+            },
             providesTags: ["Todo"],
         }),
         toggleTodo: build.mutation<void, Omit<Todo, "dayId" | "userId">>({
@@ -16,11 +30,10 @@ const api = createApi({
                 method: "PATCH",
                 body: { ...todo, completed: !todo.completed },
             }),
-            // invalidatesTags: ["Todo"],
             onQueryStarted: async ({ id }, { dispatch, queryFulfilled }) => {
                 const patchResult = dispatch(
                     api.util.updateQueryData("getTodos", undefined, (draft) => {
-                        const current = draft.find((x) => x.id === id);
+                        const current = draft.entities[id];
                         if (current) {
                             current.completed = !current.completed;
                         }
@@ -39,19 +52,18 @@ const api = createApi({
                 method: "POST",
                 body: { title },
             }),
+            // TODO: maybe create here pessimistic update instead of inivalidating
             invalidatesTags: ["Todo"],
         }),
-        deleteTodo: build.mutation<void, number>({
+        deleteTodo: build.mutation<void, string>({
             query: (id) => ({
                 url: `/todo/${id}`,
                 method: "DELETE",
             }),
-            // invalidatesTags: ["Todo"],
             onQueryStarted: async (id, { dispatch, queryFulfilled }) => {
                 const patchResult = dispatch(
                     api.util.updateQueryData("getTodos", undefined, (draft) => {
-                        const current = draft.findIndex((x) => x.id === id);
-                        draft.splice(current, 1);
+                        todoAdapter.removeOne(draft, id);
                     })
                 );
                 try {
@@ -65,6 +77,18 @@ const api = createApi({
 });
 
 export default api;
+
+const selectTodosResult = api.endpoints.getTodos.select();
+
+const selectTodosData = createSelector(
+    selectTodosResult,
+    (result) => result.data
+);
+
+export const { selectIds: selectTodoIds, selectById: selectTodoById } =
+    todoAdapter.getSelectors<RootState>(
+        (state) => selectTodosData(state) ?? initialState
+    );
 
 export const {
     useGetTodosQuery,
